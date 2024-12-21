@@ -2,25 +2,49 @@ package views;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.stage.Stage;
 import javafx.scene.Scene;
-import javafx.scene.layout.VBox;
-import javafx.scene.control.TableView;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import models.MenuItem;
 import utils.MenuDAO;
+import utils.MenuObserver;
 
-public class ViewMenu {
-    public static void display() {
+public class ViewMenu implements MenuObserver {
+    private TableView<MenuItem> table;  // Class-level TableView
+    private MenuDAO menuDAO;
+
+    // Constructor to subscribe ViewMenu to MenuDAO updates
+    public ViewMenu(MenuDAO menuDAO) {
+        this.menuDAO = menuDAO;
+        this.menuDAO.addObserver(this);  // Subscribe as observer
+    }
+
+    public void display() {
         Stage stage = new Stage();
         VBox root = new VBox(10);
         root.setStyle("-fx-padding: 20px;");
 
-        // TableView for Menu Items
-        TableView<MenuItem> table = new TableView<>();
+        // Initialize the TableView
+        table = new TableView<>();
+        setupTableColumns();
 
-        // Columns
+        // Load initial data into the table
+        ObservableList<MenuItem> menuItems = FXCollections.observableArrayList(menuDAO.getMenuItems());
+        table.setItems(menuItems);
+
+        root.getChildren().add(table);
+
+        Scene scene = new Scene(root, 400, 400);
+        stage.setTitle("Menu");
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    // Setup TableView columns
+    private void setupTableColumns() {
         TableColumn<MenuItem, String> nameColumn = new TableColumn<>("Name");
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
 
@@ -31,16 +55,14 @@ public class ViewMenu {
         priceColumn.setCellValueFactory(new PropertyValueFactory<>("price"));
 
         table.getColumns().addAll(nameColumn, categoryColumn, priceColumn);
+    }
 
-        // Add data to TableView
-        ObservableList<MenuItem> menuItems = FXCollections.observableArrayList(MenuDAO.getMenuItems());
-        System.out.println("Number of menu items retrieved: " + menuItems.size());
-        table.setItems(menuItems);
+    @Override
+    public void update() {
+        System.out.println("Menu updated. Refreshing view...");
 
-        root.getChildren().add(table);
-        Scene scene = new Scene(root, 400, 400);
-        stage.setTitle("Menu");
-        stage.setScene(scene);
-        stage.show();
+        // Refresh the TableView with updated data
+        ObservableList<MenuItem> updatedItems = FXCollections.observableArrayList(menuDAO.getMenuItems());
+        table.setItems(updatedItems);
     }
 }

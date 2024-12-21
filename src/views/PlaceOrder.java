@@ -1,6 +1,8 @@
 package views;
 
 import commands.Command;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.layout.VBox;
@@ -9,6 +11,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import commands.PlaceOrderCommand;
 import invoker.ActionInvoker;
+import models.MenuItem;
+import utils.MenuDAO;
+
+import java.util.List;
 
 public class PlaceOrder {
     public static void display() {
@@ -18,11 +24,17 @@ public class PlaceOrder {
 
         // ListView for Menu Items
         ListView<String> listView = new ListView<>();
-        listView.getItems().addAll(
-                "Pizza - $10.99",
-                "Fries - $4.99",
-                "Ice Cream - $3.49"
-        );
+
+        // Retrieve menu items from the database
+        MenuDAO menuDAO = new MenuDAO();
+        List<MenuItem> menuItems = menuDAO.getMenuItems();
+
+        // Convert menu items to ListView format (name - price)
+        ObservableList<String> observableMenu = FXCollections.observableArrayList();
+        for (MenuItem item : menuItems) {
+            observableMenu.add(item.getName() + " - $" + item.getPrice());
+        }
+        listView.setItems(observableMenu);
 
         // Input field for Table ID
         TextField tableField = new TextField();
